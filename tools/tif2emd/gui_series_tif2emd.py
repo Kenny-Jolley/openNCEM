@@ -154,7 +154,7 @@ class Converter(QtGui.QWidget):
             
             
             for i in range(len(dims)):
-                femd.write_dim('dim{:d}'.format(i+1), dims[i], grp)
+                femd.write_dim(dims[i], grp)
 
             femd.put_comment('Converted TIF files to EMD using the openNCEM tools.')    
 

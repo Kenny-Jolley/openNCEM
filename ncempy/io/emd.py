@@ -188,7 +188,7 @@ class fileEMD:
             # take a look at each item in the group
             for item in group:
                 # check if group
-                if group.get(item, getclass=True) == h5py._hl.group.Group:
+                if group.get(item, getclass=True) == h5py.Group:
                     item = group.get(item)
                     # check if emd_group_type
                     if 'emd_group_type' in item.attrs:
@@ -241,7 +241,7 @@ class fileEMD:
         dims = tuple(dims)
         return dims
 
-    def get_emdgroup(self, group, memmap = False):
+    def get_emdgroup(self, group, memmap=False):
         """Get the emd data saved in the requested group.
 
         Parameters
@@ -266,7 +266,7 @@ class fileEMD:
         """
 
         # check input
-        if not isinstance(group, h5py._hl.group.Group):
+        if not isinstance(group, h5py.Group):
             if isinstance(group, int):
                 try:
                     group = self.list_emds[group]
@@ -293,7 +293,6 @@ class fileEMD:
             dims = self.get_emddims(group)
 
             return data, dims
-
         except:
             # if something goes wrong, return None
             print('Content of "{}" does not seem to be in emd specified shape'.format(group.name))
@@ -311,14 +310,13 @@ class fileEMD:
                 Label for dataset, usually dim1, dim2, dimN.
             dim: tuple
                 Tuple containing (data, name, units).
-            parent: h5py._hl.group.Group
+            parent: h5py.Group
                 HDF5 handle to parent group.
 
         Returns
         -------
-            : h5py._hl.group.Group
+            : h5py.Group
                 HDF5 dataset handle referencing this dim.
-
         """
 
         try:
@@ -402,13 +400,12 @@ class fileEMD:
 
             # create dim datasets
             for i in range(len(dims)):
-                self.write_dim('dim{}'.format(i + 1), dims[i], grp)
+                self.write_dim(dims[i], grp)
 
             # update emds list
             self.list_emds = self.find_emdgroups(self.file_hdl)
 
             return grp
-
         except:
             print('Something went wrong trying to write the dataset.')
 
@@ -460,7 +457,7 @@ class fileEMD:
         
         
         """
-        return self.get_emdgroup(group, memmap = True)
+        return self.get_emdgroup(group, memmap=True)
         
 
 def defaultDims(data, pixel_size=None):
@@ -505,9 +502,8 @@ def defaultDims(data, pixel_size=None):
 class fileEMD_v05(fileEMD):
     """ Subclass fileEMD to read v0.5"""
 
-    def __init__(self, filename):
-        self.readonly = True
-        super(fileEMD_v05, self).__init__(filename)
+    def __init__(self, filename, *args, **kwargs):
+        super(fileEMD_v05, self).__init__(filename, readonly=True)
 
     def check_version(self):
         """Check version information. Sets version information if not set"""
@@ -563,8 +559,25 @@ def emdReader(filename, dsetNum=0):
             >> emd0 = nio.emd.emdReader('filename.emd', dsetNum = 0)
 
     """
-    with fileEMD(filename, readonly = True) as emd0:
-        d, dims = emd0.get_emdgroup(dsetNum, memmap = False) # memmap must be false. File is closed
+
+    with h5py.File(filename, 'r') as f0:
+        if 'version_major' in f0.attrs and 'version_minor' in f0.attrs:
+            # read version information
+            version = (f0.attrs['version_major'], f0.attrs['version_minor'])
+        elif '4DSTEM_simulation' in f0 or '4DSTEM_experiment' in f0:
+            root_name = [ii for ii in f0.keys()][0]
+            version = (f0[root_name].attrs['version_major'], f0[root_name].attrs['version_minor'])
+        else:
+            version = (0, 2)
+
+    if version == (0, 5):
+        emd_class = fileEMD_v05
+    else:
+        emd_class = fileEMD
+
+    with emd_class(filename, readonly=True) as emd0:
+        print(emd0)
+        d, dims = emd0.get_emdgroup(dsetNum, memmap=False)  # memmap must be false. File is closed
         out = {'data': d, 'filename': filename, 'pixelSize': []}
 
         for dim in dims:
@@ -581,6 +594,15 @@ def emdReader(filename, dsetNum=0):
 if __name__ == '__main__':
     fPath = Path(r'C:\Users\linol\data\LiPF6 multislice') / Path('XYZ_DEC_LiPF6_liquid_1M_small_eq_rot_crop.h5')
 
-    emd00 = fileEMD_v05(fPath)
-    print(emd00.list_emds)
-    aa = emd00.get_emdgroup(0)
+    #with fileEMD_v05(fPath) as emd00:
+    #    print(emd00.list_emds)
+    #    aa0 = emd00.get_emdgroup(0)
+    #    bb0, bb_dims = emd00.get_memmap(0)
+
+    #emd000 = emdReader(fPath, dsetNum=0)
+    #print(emd000.keys())
+
+    with fileEMD('c:/users/linol/temp.emd',readonly=False) as emd1:
+        data = np.zeros((10, 10))
+        dims = defaultDims(data,(1,1))
+        emd1.put_emdgroup('temp', data, dims)

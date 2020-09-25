@@ -649,7 +649,7 @@ class fileSER:
                 
                 # write dimensions
                 for i in range(len(dims)):
-                    f.write_dim('dim{:d}'.format(i+1), dims[i], grp)
+                    f.write_dim(dims[i], grp)
 
                 # write out time as additional dataset
                 grp = f.put_emdgroup('timestamp', time, dims_time, parent=grp)
@@ -674,7 +674,7 @@ class fileSER:
                     dset[:,:] = data[:,:]
                     
                     for i in range(len(dims)):
-                        f.write_dim('dim{:d}'.format(i+1), dims[i], grp)
+                        f.write_dim(dims[i], grp)
                         
                     dset.attrs['timestamp'] = tag['Time']
                 else:
@@ -712,10 +712,10 @@ class fileSER:
 
                     # write dimensions
                     for i in range(len(dims)):
-                        f.write_dim('dim{:d}'.format(i+1), dims[i], grp)
+                        f.write_dim(dims[i], grp)
                     
                     # write out time as additional dim vector
-                    f.write_dim('dim1_time', (time, 'timestamp', '[s]'), grp)
+                    f.write_dim((time, 'timestamp', '[s]'), grp)
 
         elif self.head['DataTypeID'] == 0x4120:
             # 1D datasets; spectra
@@ -772,7 +772,7 @@ class fileSER:
                         
                     # write dimensions
                     for i in range(len(dims)):
-                        f.write_dim('dim{:d}'.format(i+1), dims[i], grp)
+                        f.write_dim(dims[i], grp)
  
                     # write out time as additional dataset
                     grp = f.put_emdgroup('timestamp', time, dims_time, parent=grp)
@@ -808,10 +808,10 @@ class fileSER:
 
                 # write dimensions
                 for i in range(len(dims)):
-                    f.write_dim('dim{:d}'.format(i+1), dims[i], grp)
+                    f.write_dim(dims[i], grp)
 
                 # write out time as additional dim vector
-                f.write_dim('dim1_time', (time, 'timestamp', '[s]'), grp)
+                f.write_dim((time, 'timestamp', '[s]'), grp)
         else:
             raise RuntimeError('Unknown DataTypeID')    
 
