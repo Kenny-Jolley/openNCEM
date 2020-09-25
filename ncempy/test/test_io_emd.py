@@ -65,3 +65,15 @@ class Testemd:
         with ncempy.io.emd.fileEMD(temp_file, readonly=True) as emd1:
             dd2, dims2 = emd1.get_emdgroup(0)
         assert dd2.shape == (10, 11, 12)
+
+    def test_emdv05(selfself, data_location):
+        fPath = data_location / Path('prismatic_output.h5')
+        with ncempy.io.emd.fileEMD_v05(fPath) as emd00:
+            print(emd00.list_emds)
+            aa0, aa0_dims = emd00.get_emdgroup(0)
+            assert aa0.shape == (3, 3, 176, 176)
+            bb0, bb_dims = emd00.get_memmap(0)
+            assert bb0.shape == (3, 3, 176, 176)
+
+        emd000 = ncempy.io.emd.emdReader(fPath, dsetNum=0)
+        assert emd000['data'].shape == (3, 3, 176, 176)

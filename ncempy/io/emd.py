@@ -399,8 +399,8 @@ class fileEMD:
             _ = grp.create_dataset('data', data=data, **kwargs)
 
             # create dim datasets
-            for i in range(len(dims)):
-                self.write_dim('dim{}'.format(i + 1), dims[i], grp)
+            for ii in range(len(dims)):
+                self.write_dim('dim{}'.format(ii + 1), dims[i], grp)
 
             # update emds list
             self.list_emds = self.find_emdgroups(self.file_hdl)
@@ -594,15 +594,10 @@ def emdReader(filename, dsetNum=0):
 if __name__ == '__main__':
     fPath = Path(r'C:\Users\linol\data\LiPF6 multislice') / Path('XYZ_DEC_LiPF6_liquid_1M_small_eq_rot_crop.h5')
 
-    #with fileEMD_v05(fPath) as emd00:
-    #    print(emd00.list_emds)
-    #    aa0 = emd00.get_emdgroup(0)
-    #    bb0, bb_dims = emd00.get_memmap(0)
+    with fileEMD_v05(fPath) as emd00:
+        print(emd00.list_emds)
+        aa0 = emd00.get_emdgroup(0)
+        bb0, bb_dims = emd00.get_memmap(0)
 
-    #emd000 = emdReader(fPath, dsetNum=0)
-    #print(emd000.keys())
-
-    with fileEMD('c:/users/linol/temp2.emd', readonly=False) as emd1:
-        data = np.zeros((10, 10))
-        dims = defaultDims(data,(1,1))
-        emd1.put_emdgroup('temp', data, dims)
+    emd000 = emdReader(fPath, dsetNum=0)
+    print(emd000.keys())
