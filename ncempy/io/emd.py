@@ -400,7 +400,7 @@ class fileEMD:
 
             # create dim datasets
             for i in range(len(dims)):
-                self.write_dim(dims[i], grp)
+                self.write_dim('dim{}'.format(i + 1), dims[i], grp)
 
             # update emds list
             self.list_emds = self.find_emdgroups(self.file_hdl)
@@ -602,7 +602,7 @@ if __name__ == '__main__':
     #emd000 = emdReader(fPath, dsetNum=0)
     #print(emd000.keys())
 
-    with fileEMD('c:/users/linol/temp.emd',readonly=False) as emd1:
+    with fileEMD('c:/users/linol/temp2.emd', readonly=False) as emd1:
         data = np.zeros((10, 10))
         dims = defaultDims(data,(1,1))
         emd1.put_emdgroup('temp', data, dims)
