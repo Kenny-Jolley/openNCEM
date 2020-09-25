@@ -202,6 +202,10 @@ class fileEMD:
 
         return emds
 
+    def _get_dset_string(self, group):
+        """All dset names will be data for v0.2"""
+        return 'data'
+
     def get_emddims(self, group):
         """Get the emdtype dimensions saved in in group.
 
@@ -218,7 +222,7 @@ class fileEMD:
         """
         # get the dims
         dims = []
-        for i in range(len(group['data'].shape)):
+        for i in range(len(group[self._get_dset_string(group)].shape)):
             dim = group['dim{}'.format(i + 1)]
             # save them as (vector, name, units)
 
@@ -281,9 +285,9 @@ class fileEMD:
         try:
             # get the data
             if memmap:
-                data = group['data']
+                data = group[self._get_dset_string(group)]
             else:
-                data = group['data'][:]
+                data = group[self._get_dset_string(group)][:]
 
             # get the dimensions.
             dims = self.get_emddims(group)
@@ -498,6 +502,40 @@ def defaultDims(data, pixel_size=None):
     return dims
 
 
+class fileEMD_v05(fileEMD):
+    """ Subclass fileEMD to read v0.5"""
+
+    def __init__(self, filename):
+        self.readonly = True
+        super(fileEMD_v05, self).__init__(filename)
+
+    def check_version(self):
+        """Check version information. Sets version information if not set"""
+        if 'version_major' in self.file_hdl.attrs and 'version_minor' in self.file_hdl.attrs:
+            # read version information
+            self.version = (self.file_hdl.attrs['version_major'], self.file_hdl.attrs['version_minor'])
+            # compare to implementation
+            if not self.version == (0, 5):
+                print('WARNING: You are reading a version {}.{} EMD file,'
+                      'this implementation assumes version 0.5!'.format(self.version[0], self.version[1]))
+
+    def _get_dset_string(self, group):
+        """dset names depend on the parent emd group name"""
+        parent_name = group.name.split('/')[-2]
+        if parent_name == 'datacubes':
+            return 'datacube'
+        elif parent_name == 'diffractionslices':
+            return 'diffractionslice'
+        elif parent_name == 'pointlistarrayss':
+            return 'pointlistarray'
+        elif parent_name == 'pointlists':
+            return 'pointlist'
+        elif parent_name == 'realslices':
+            return 'realslice'
+        else:
+            raise ValueError('dset name not supported')
+
+
 def emdReader(filename, dsetNum=0):
     """ A simple helper function to read in the data and metadata 
     in a structured format similar to the other ncempy readers.
@@ -541,11 +579,8 @@ def emdReader(filename, dsetNum=0):
 
 
 if __name__ == '__main__':
-    fPath = Path(r'C:\Users\linol\Data') / Path('Acquisition_18.emd')
+    fPath = Path(r'C:\Users\linol\data\LiPF6 multislice') / Path('XYZ_DEC_LiPF6_liquid_1M_small_eq_rot_crop.h5')
 
-    emd00 = emdReader(fPath)
-
-    print(emd00['pixelSize'])
-
-    print(defaultDims(np.zeros((10, 20, 30)), pixel_size=(0.1, 0.2, 0.3)))
-    print(defaultDims(np.zeros((10, 20, 30))))
+    emd00 = fileEMD_v05(fPath)
+    print(emd00.list_emds)
+    aa = emd00.get_emdgroup(0)
