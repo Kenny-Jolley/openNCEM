@@ -49,10 +49,11 @@ class fileEMD:
 
         """
 
+        self.filename = filename
+        self.readonly = readonly
+
         # necessary declarations in case something goes bad
         self.file_hdl = None
-
-        # convenience handles to access the data in the emd file, everything can as well be accessed using the file_hdl
         self.version = None
         self.data = None
         self.microscope = None
@@ -86,19 +87,7 @@ class fileEMD:
         # if we got a working file
         if self.file_hdl:
             # check version information
-            if 'version_major' in self.file_hdl.attrs and 'version_minor' in self.file_hdl.attrs:
-                # read version information
-                self.version = (self.file_hdl.attrs['version_major'], self.file_hdl.attrs['version_minor'])
-                # compare to implementation
-                if not self.version == (0, 2):
-                    print(
-                        'WARNING: You are reading a version {}.{} EMD file, this implementation assumes version 0.2!'.format(
-                            self.version[0], self.version[1]))
-            else:
-                # set version information
-                if not readonly:
-                    self.file_hdl.attrs['version_major'] = 0
-                    self.file_hdl.attrs['version_minor'] = 2
+            self.check_version()
 
             # check for data group
             if 'data' not in self.file_hdl:
@@ -158,6 +147,23 @@ class fileEMD:
         """
         self.__del__()
         return None
+
+    def check_version(self):
+        """Check the version of the EMD file. Set the version to 0.2 if it does not exist and the file
+        is opened with readonly=False"""
+        if 'version_major' in self.file_hdl.attrs and 'version_minor' in self.file_hdl.attrs:
+            # read version information
+            self.version = (self.file_hdl.attrs['version_major'], self.file_hdl.attrs['version_minor'])
+            # compare to implementation
+            if not self.version == (0, 2):
+                print(
+                    'WARNING: You are reading a version {}.{} EMD file, this implementation assumes version 0.2!'.format(
+                        self.version[0], self.version[1]))
+        else:
+            # set version information to 0.2
+            if not self.readonly:
+                self.file_hdl.attrs['version_major'] = 0
+                self.file_hdl.attrs['version_minor'] = 2
 
     def find_emdgroups(self, parent):
         """Find all emd_data_type groups within the group parent and return a list of references to their HDF5 groups.
@@ -229,7 +235,7 @@ class fileEMD:
             dims.append((dim[:], name.decode('utf-8'), units.decode('utf-8')))
 
         dims = tuple(dims)
-        return (dims)
+        return dims
 
     def get_emdgroup(self, group, memmap = False):
         """Get the emd data saved in the requested group.
