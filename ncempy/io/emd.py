@@ -337,7 +337,7 @@ class fileEMD:
                 Label for the emdtype group containing the dataset.
             data: np.ndarray
                 Numpy array containing the data.
-            dims: tuple
+            dims: tuple or list
                 Tuple containing the necessary dims as ((vec, name, units), (vec, name, units), ...)
             parent: h5py._hl.group.Group/None
                 Parent for the emdtype group, if None it will be written to /data.

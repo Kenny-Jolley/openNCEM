@@ -5,8 +5,6 @@ Tests for the emd io module.
 import pytest
 
 from pathlib import Path
-import os
-import os.path
 import tempfile
 
 import numpy as np
@@ -34,7 +32,7 @@ class Testemd:
     @pytest.fixture
     def temp_file(self):
         tt = tempfile.NamedTemporaryFile(mode='wb')
-        tt.close() # need to close the file to use it later
+        tt.close()  # need to close the file to use it later
         return Path(tt.name)
 
     def test_read_emd_2d(self, data_location):
@@ -66,7 +64,7 @@ class Testemd:
             dd2, dims2 = emd1.get_emdgroup(0)
         assert dd2.shape == (10, 11, 12)
 
-    def test_emdv05(selfself, data_location):
+    def test_emdv05(self, data_location):
         fPath = data_location / Path('prismatic_output.h5')
         with ncempy.io.emd.fileEMD_v05(fPath) as emd00:
             print(emd00.list_emds)
