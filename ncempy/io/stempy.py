@@ -174,13 +174,15 @@ class fileSTEMPY:
 
 
 def stempyReader(fname):
-    """Read in the stempy hdf5 data similarly to other readers
+    """Read in the stempy hdf5 data and returns as a dictionary
 
-
+    Returns
+    -------
+    : dict
+        A dictionary of the data and metadata with keys data, scan_dimensions, and frame dimensions.
     """
     out = {}
     with fileSTEMPY(fname) as f0:
-
         out['data'] = f0.data[:]
         out['scan_dimensions'] = f0.scan_dimensions
         out['frame_dimensions'] = f0.frame_dimensions
