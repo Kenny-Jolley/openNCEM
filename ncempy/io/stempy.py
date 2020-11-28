@@ -86,7 +86,7 @@ class fileSTEMPY:
         if self.file_hdl:
             self.data = self.file_hdl['electron_events/frames']
             self.frame_dimensions = (self.data.attrs['Ny'], self.data.attrs['Nx'])
-            scan_grp = self.file_hdl['electron_events/scan_position']
+            scan_grp = self.file_hdl['electron_events/scan_positions']
             self.scan_dimensions = (scan_grp.attrs['Ny'], scan_grp.attrs['Nx']) # row col
             self.scan_positions = scan_grp
 
@@ -124,7 +124,7 @@ class fileSTEMPY:
         out = self.data[:]
 
         if reshape:
-            out.reshape(self.scan_dimensions)
+            out = out.reshape(self.scan_dimensions)
 
         return out
 
@@ -227,8 +227,15 @@ class fileSTEMPY:
         return image
 
 
-def stempyReader(fname):
+def stempyReader(fname, reshape=False):
     """Read in the stempy hdf5 data and returns as a dictionary
+
+    Parameters
+    ----------
+    reshape : bool
+        The data in the file is raveled for both the scan dimensions and the event locations. With reshape True the
+        scan dimensions will be applied to the first axis to make the data a ragged 3D array with axes
+        [scanRow, scanColumn, event_location]
 
     Returns
     -------
@@ -241,3 +248,16 @@ def stempyReader(fname):
         out['scan_dimensions'] = f0.scan_dimensions
         out['frame_dimensions'] = f0.frame_dimensions
     return out
+
+
+if __name__ == '__main__':
+    fname = Path(r'C:\Users\linol\data\20200928 - STO PTO\data_scan213_th4.0_electrons.h5')
+    with fileSTEMPY(fname) as st0:
+        print(st0.scan_dimensions)
+        aa = st0.getDataset(reshape=True)
+        print(aa.shape)
+        dp = st0.sum_sparse(0, 100)
+        print(dp.shape)
+
+        bb = stempyReader(fname)
+        print(bb['data'].shape)
