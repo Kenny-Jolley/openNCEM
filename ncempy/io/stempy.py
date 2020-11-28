@@ -12,16 +12,42 @@ from collections import namedtuple
 import h5py
 import numpy as np
 
+
 class fileSTEMPY:
     """ Class to represent stempy counted datasets
 
     Attributes
     ----------
+    file_hdl : h5py.File
+        The file handle for the hdf5 file.
+    scan_dimensions : tuple
+        Tuple of scan dimensions in the order of (row, col) which correspond to the  fast scan and slow scan directions
+        of the STEM scan.
+    frame_dimensions : tuple
+        The shape of each frame. Always 576x576 for 4D Camera
+    data : h5py.dataset
+        The h5py dataset on disk. This is located at /electron_events/frames
 
     Methods
     -------
-
-
+    getDataset(reshape)
+        Load the dataset into memory. You can have it automatically reshaped to a 3D ragged array or leave the scan
+        dimensions raveled.
+    getStempy()
+        Loads the data the same as stempy.io.load_electron_counts()
+    getNamedTuple()
+        Same as getStempy()
+    getMemmap()
+        Return the h5py dataset and leave the data on disk. This is an h5py dataset and can not be reshaped on disk.
+    getArray()
+        Not implemented currently. Will eventually return a custom numpy array enabling slicing so the ragged array
+        looks like a normal 4D ndarray
+    sum_sparse(start, end)
+        Creates a dense frame as a sum of the frames requested. The sum is done using a fast sparse algorithm.
+    com_sparse()
+        Calculates the center of mass (COM) of each frame. Frames with no data have NAN as their center of mass.
+    calculate_stem_images()
+        Calculates a stem image from the sparse data using an inner and outer virtual radial detector.
 
     """
 
@@ -137,6 +163,7 @@ class fileSTEMPY:
         : h5py.dataset
             The h5py dataset on disk.
         """
+        return self.data
 
     def sum_sparse(self, start=0, end=-1):
         """Return a dense frame summed from all of the events in the range specified by start and end.
@@ -171,6 +198,33 @@ class fileSTEMPY:
 
         com2 = com2.reshape((2, self.scan_dimensions[0], self.scan_dimensions[1]))
         return com2
+
+    def calculate_stem_image(self, center, inner_angle, outer_angle):
+        """Calculate a STEM image for the center, inner and outer angles (in pixels) provided.
+
+        Parameters
+        ----------
+        center : tuple
+            The center of the frames.
+        inner_angle : int
+            The pixel radius of the inner angle
+        outer_angle : int
+            The pixel radius of the outer angle
+
+        Returns
+        -------
+        : ndarray
+            The STEM image as an ndarray reshaped to the correct dimensions.
+
+        """
+        image = np.zeros((self.scan_dimensions[0]*self.scan_dimensions[1]), dtype=np.uint32)
+        for ii, ev in enumerate(self.data):
+            x, y = np.unravel_index(ev, self.frame_dimensions)
+            r = np.sqrt((x - center[0]) ** 2 + (y - center[1]) ** 2)
+            image[ii] = len(r[(r >= inner_angle) & (r <= outer_angle)])
+        image = image.reshape(self.scan_dimensions)
+
+        return image
 
 
 def stempyReader(fname):
